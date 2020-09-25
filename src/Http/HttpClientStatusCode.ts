@@ -1,4 +1,4 @@
-enum HttpClientResponseStatusCode {
+enum HttpClientStatusCode {
     OK = 200,
     Created = 201,
     NoContent = 204,
@@ -9,4 +9,4 @@ enum HttpClientResponseStatusCode {
     Conflict = 409
 }
 
-export default HttpClientResponseStatusCode;
+export default HttpClientStatusCode;
