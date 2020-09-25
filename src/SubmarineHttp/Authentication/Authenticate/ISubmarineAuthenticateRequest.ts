@@ -1,4 +1,4 @@
 export default interface ISubmarineAuthenticateRequest {
-    emailAddress: string;
-    password: string;
+    emailAddress?: string;
+    password?: string;
 }
