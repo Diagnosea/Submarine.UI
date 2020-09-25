@@ -18,10 +18,10 @@ export default abstract class HttpClient {
         }
     }
 
-    protected async _performHttpRequest(url: string, options: RequestInit = {}): Promise<Response> {
+    protected async _performHttpRequest(url: string, init: RequestInit = {}): Promise<Response> {
         const fullUrl = `${this._baseUrl}/${url}`;
-        options.headers = this._generateHeaders(options.headers);;
+        init.headers = this._generateHeaders(init.headers);
 
-        return await fetch(fullUrl, options);
+        return await fetch(fullUrl, init);
     }
 }

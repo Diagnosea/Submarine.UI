@@ -11,8 +11,8 @@ import HttpClientBearerAuthorizationHeader from "../Http/Headers/HttpClientBeare
 
 export default abstract class SubmarineHttpClient extends HttpClient {
 
-    protected constructor(version: string) {
-        super(`${version}`);
+    protected constructor(version: string, route: string) {
+        super(`${version}/${route}`);
 
         this._setAcceptHeader("application/json")
     }
@@ -22,30 +22,30 @@ export default abstract class SubmarineHttpClient extends HttpClient {
         this._headers.push(header);
     }
 
-    public get<TResponse>(url: string, options: RequestInit = {}): Promise<TResponse> {
-        options.method = HttpClientMethod.GET;
+    public get<TResponse>(url: string, init: RequestInit = {}): Promise<TResponse> {
+        init.method = HttpClientMethod.GET;
 
-        return this._performSubmarineHttpRequest<TResponse>(url, options);
+        return this._performSubmarineHttpRequest<TResponse>(url, init);
     }
 
-    public post<TRequest, TResponse>(url: string, body: TRequest, options: RequestInit = {}) {
-        options.method = HttpClientMethod.POST;
-        options.body = JSON.stringify(body);
+    public post<TRequest, TResponse>(url: string, body: TRequest, init: RequestInit = {}) {
+        init.method = HttpClientMethod.POST;
+        init.body = JSON.stringify(body);
 
-        return this._performSubmarineHttpRequest<TResponse>(url, options)
+        return this._performSubmarineHttpRequest<TResponse>(url, init)
     }
 
-    public put<TRequest, TResponse>(url: string, body: TRequest, options: RequestInit = {}) {
-        options.method = HttpClientMethod.PUT;
-        options.body = JSON.stringify(body);
+    public put<TRequest, TResponse>(url: string, body: TRequest, init: RequestInit = {}) {
+        init.method = HttpClientMethod.PUT;
+        init.body = JSON.stringify(body);
 
-        return this._performSubmarineHttpRequest<TResponse>(url, options);
+        return this._performSubmarineHttpRequest<TResponse>(url, init);
     }
 
-    public delete(url: string, options: RequestInit = {}) {
-        options.method = HttpClientMethod.DELETE;
+    public delete(url: string, init: RequestInit = {}) {
+        init.method = HttpClientMethod.DELETE;
 
-        return this._performSubmarineHttpRequest<void>(url, options);
+        return this._performSubmarineHttpRequest<void>(url, init);
     }
 
     private _setAcceptHeader(...contentTypes: string[]) {
