@@ -11,8 +11,8 @@ import HttpClientBearerAuthorizationHeader from "../Http/Headers/HttpClientBeare
 
 export default abstract class SubmarineHttpClient extends HttpClient {
 
-    protected constructor(version: string) {
-        super(`${version}`);
+    protected constructor(version: string, route: string) {
+        super(`${version}/${route}`);
 
         this._setAcceptHeader("application/json")
     }
