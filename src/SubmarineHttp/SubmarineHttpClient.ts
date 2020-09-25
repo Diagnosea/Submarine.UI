@@ -1,4 +1,3 @@
-import HttpClient from "../Http/HttpClient";
 import * as StatusCodeMap from "./SubmarineStatusCodeMap";
 import SubmarineError from "./Errors/SubmarineError";
 import SubmarineExceptionalError from "./Errors/SubmarineExceptionalError";
@@ -6,41 +5,56 @@ import ISubmarineExceptionResponse from "./ISubmarineExceptionResponse";
 import ISubmarineValidationResponse from "./ISubmarineValidationResponse";
 import SubmarineValidationError from "./Errors/SubmarineValidationError";
 import HttpClientMethod from "../Http/HttpClientMethod";
+import HttpClient from "../Http/HttpClient";
+import HttpClientAcceptHeader from "../Http/Headers/HttpClientAcceptHeader";
+import HttpClientBearerAuthorizationHeader from "../Http/Headers/HttpClientBearerAuthorizationHeader";
 
-export default class SubmarineHttpClient extends HttpClient {
-    private readonly _version: string;
+export default abstract class SubmarineHttpClient extends HttpClient {
 
-    constructor(version: string) {
-        super();
+    protected constructor(version: string) {
+        super(`${version}`);
 
-        this._version = version;
+        this._setAcceptHeader("application/json")
     }
 
-    public get<TResponse>(url: string, options?: RequestInit): Promise<TResponse> {
-        return this._performSubmarineHttpRequest<void, TResponse>(HttpClientMethod.GET, url, undefined, options);
+    public setBearerToken(bearerToken: string) {
+        const header = new HttpClientBearerAuthorizationHeader(bearerToken);
+        this._headers.push(header);
     }
 
-    public post<TRequest, TResponse>(url: string, body: TRequest, options?: RequestInit) {
-        return this._performSubmarineHttpRequest<TRequest, TResponse>(HttpClientMethod.POST, url, body, options)
+    public get<TResponse>(url: string, options: RequestInit = {}): Promise<TResponse> {
+        options.method = HttpClientMethod.GET;
+
+        return this._performSubmarineHttpRequest<TResponse>(url, options);
     }
 
-    public put<TRequest, TResponse>(url: string, body: TRequest, options?: RequestInit) {
-        return this._performSubmarineHttpRequest<TRequest, TResponse>(HttpClientMethod.PUT, url, body, options);
-    }
-
-    public delete(url: string, options?: RequestInit) {
-        return this._performSubmarineHttpRequest<void, void>(HttpClientMethod.DELETE, url, undefined, options);
-    }
-
-    protected _generateUrl(url: string) {
-        return `${this._version}/${url}`;
-    }
-
-    protected async _performSubmarineHttpRequest<TRequest, TResponse>(method: string, url: string, body?: TRequest, options: RequestInit = {}): Promise<TResponse>  {
-        const fullUrl = this._generateUrl(url);
+    public post<TRequest, TResponse>(url: string, body: TRequest, options: RequestInit = {}) {
+        options.method = HttpClientMethod.POST;
         options.body = JSON.stringify(body);
 
-        const response: Response = await super._performHttpRequest(method, fullUrl, options);
+        return this._performSubmarineHttpRequest<TResponse>(url, options)
+    }
+
+    public put<TRequest, TResponse>(url: string, body: TRequest, options: RequestInit = {}) {
+        options.method = HttpClientMethod.PUT;
+        options.body = JSON.stringify(body);
+
+        return this._performSubmarineHttpRequest<TResponse>(url, options);
+    }
+
+    public delete(url: string, options: RequestInit = {}) {
+        options.method = HttpClientMethod.DELETE;
+
+        return this._performSubmarineHttpRequest<void>(url, options);
+    }
+
+    private _setAcceptHeader(...contentTypes: string[]) {
+        const acceptHeader = new HttpClientAcceptHeader(contentTypes);
+        this._headers.push(acceptHeader);
+    }
+
+    protected async _performSubmarineHttpRequest<TResponse>(url: string, options: RequestInit): Promise<TResponse>  {
+        const response = await super._performHttpRequest(url, options);
 
         await SubmarineHttpClient._validateAuthorizationFailureStatusCodes(response);
         await SubmarineHttpClient._validateExceptionalFailureStatusCodes(response);

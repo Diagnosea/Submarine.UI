@@ -1,11 +1,11 @@
 import IHttpClientHeader from "./Headers/IHttpClientHeader";
-import {HttpClientAcceptHeader} from "./Headers/HttpClientAcceptHeader";
 
 export default abstract class HttpClient {
+    protected readonly _baseUrl: string;
     protected readonly _headers: IHttpClientHeader[] = [];
 
-    protected _setAcceptHeader(...contentTypes: string[]) {
-        const header = new HttpClientAcceptHeader(contentTypes)
+    protected constructor(baseUrl: string) {
+        this._baseUrl = baseUrl;
     }
 
     private _generateHeaders(currentHeaders?: HeadersInit): HeadersInit {
@@ -18,12 +18,10 @@ export default abstract class HttpClient {
         }
     }
 
-    protected async _performHttpRequest(method: string, url: string, options: RequestInit = {}): Promise<Response> {
-        const fullHeaders = this._generateHeaders(options.headers);
+    protected async _performHttpRequest(url: string, options: RequestInit = {}): Promise<Response> {
+        const fullUrl = `${this._baseUrl}/${url}`;
+        options.headers = this._generateHeaders(options.headers);;
 
-        options.method = method;
-        options.headers = fullHeaders;
-
-        return await fetch(url, options);
+        return await fetch(fullUrl, options);
     }
 }
