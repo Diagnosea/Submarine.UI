@@ -1,16 +1,16 @@
 import SubmarineAuthenticationHttpClient from "./SubmarineAuthenticationHttpClient";
 import ISubmarineRegisterRequest from "./Register/ISubmarineRegisterRequest";
 import ISubmarineRegisteredResponse from "./Register/ISubmarineRegisteredResponse";
-import HttpClientMethod from "../../Http/HttpClientMethod";
-import SubmarineValidationError from "../Errors/SubmarineValidationError";
-import ISubmarineValidationResponse from "../ISubmarineValidationResponse";
-import HttpClientStatusCode from "../../Http/HttpClientStatusCode";
-import ISubmarineExceptionResponse from "../ISubmarineExceptionResponse";
-import SubmarineExceptionalError from "../Errors/SubmarineExceptionalError";
+import HttpClientMethod from "../../../Http/HttpClientMethod";
+import SubmarineValidationError from "../../Errors/SubmarineValidationError";
+import ISubmarineValidationResponse from "../../ISubmarineValidationResponse";
+import HttpClientStatusCode from "../../../Http/HttpClientStatusCode";
+import ISubmarineExceptionResponse from "../../ISubmarineExceptionResponse";
+import SubmarineExceptionalError from "../../Errors/SubmarineExceptionalError";
 import ISubmarineAuthenticatedResponse from "./Authenticate/ISubmarineAuthenticatedResponse";
 import ISubmarineAuthenticateRequest from "./Authenticate/ISubmarineAuthenticateRequest";
-import SubmarineHttpRoute from "../SubmarineHttpRoute";
-import SubmarineHttpVersion from "../SubmarineHttpVersion";
+import SubmarineHttpRoute from "../../SubmarineHttpRoute";
+import SubmarineHttpVersion from "../../SubmarineHttpVersion";
 
 function generateResponsePromise<TResponse>(status: number, responseData: TResponse): Promise<any> {
     const json = jest.fn();
@@ -35,7 +35,7 @@ describe("SubmarineAuthenticationHttpClient", () => {
     let submarineAuthenticationHttpClient: SubmarineAuthenticationHttpClient;
 
     beforeEach(() => {
-        submarineAuthenticationHttpClient = new SubmarineAuthenticationHttpClient()
+        submarineAuthenticationHttpClient = new SubmarineAuthenticationHttpClient(SubmarineHttpVersion.one)
     })
 
     afterEach(() => {
