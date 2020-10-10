@@ -21,21 +21,8 @@ export default class AuthenticationIdentity {
         this.claims = claims;
     }
 
-    public static fromNoBearerToken() {
-        const issued = new Date(Date.now());
-        const expiration = new Date(Date.now());
-
-        const claims = new AuthenticationIdentityClaims(
-            "Invalid User ID",
-            "Invalid User Name",
-            ["Invalid Role"],
-            ["Invalid Product"],
-            "Invalid License Key",
-            issued,
-            expiration
-        );
-
-        return new AuthenticationIdentity("Invalid Bearer Token", claims);
+    public hasExpired(): boolean {
+        return this.claims.expiration < new Date();
     }
 
     public static fromBearerToken(bearerToken: string) {

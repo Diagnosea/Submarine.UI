@@ -1,49 +1,71 @@
-import React, {useState, useContext, createContext, ReactNode} from "react";
-import SubmarineAuthenticationHttpClient from "../../SubmarineHttp/Resources/Authentication/SubmarineAuthenticationHttpClient";
+import React, {Component, createContext, useContext} from "react";
+
+import IAuthenticationContext from "./IAuthenticationContext";
+import IAuthenticationContextProviderProps from "./IAuthenticationContextProviderProps";
+import IAuthenticationContextProviderState from "./IAuthenticationContextProviderState";
+import AuthenticationIdentity from "./AuthenticationIdentity";
 import SubmarineHttpVersion from "../../SubmarineHttp/SubmarineHttpVersion";
+import SubmarineAuthenticationHttpClient from "../../SubmarineHttp/Resources/Authentication/SubmarineAuthenticationHttpClient";
 import ISubmarineRegisterRequest from "../../SubmarineHttp/Resources/Authentication/Register/ISubmarineRegisterRequest";
 import ISubmarineAuthenticateRequest from "../../SubmarineHttp/Resources/Authentication/Authenticate/ISubmarineAuthenticateRequest";
 import ISubmarineAuthenticatedResponse from "../../SubmarineHttp/Resources/Authentication/Authenticate/ISubmarineAuthenticatedResponse";
-import AuthenticationIdentity from "./AuthenticationIdentity";
-import IAuthenticationContextProviderProps from "./IAuthenticationContextProviderProps";
-import IAuthenticationContext from "./IAuthenticationContext";
 
 const InitialAuthenticationContext = { register: () => {}, authenticate: () => { } } as IAuthenticationContext;
 const AuthenticationContext = createContext(InitialAuthenticationContext)
 
-export const AuthenticationContextProvider = ({ children }: IAuthenticationContextProviderProps) => {
-    const client = new SubmarineAuthenticationHttpClient(SubmarineHttpVersion.one);
+const BEARER_TOKEN_KEY = "sub-ui-bearerToken";
+const DEFAULT_BEARER_TOKEN = "";
 
-    const initialIdentity = AuthenticationIdentity.fromNoBearerToken();
-    const [identity, setIdentity] = useState(initialIdentity);
+export class AuthenticationContextProvider extends Component {
+    public readonly props!: IAuthenticationContextProviderProps;
+    public readonly state: IAuthenticationContextProviderState;
+    private readonly _authenticationHttpClient: SubmarineAuthenticationHttpClient;
 
-    const register = async (emailAddress?: string, password?: string, userName?: string, friendlyName?: string): Promise<void> => {
-        const request: ISubmarineRegisterRequest = { emailAddress, password, userName, friendlyName };
-        await client.register(request);
+    constructor(props: IAuthenticationContextProviderProps) {
+        super(props);
+
+        this.state = {};
+
+        this._authenticationHttpClient = new SubmarineAuthenticationHttpClient(SubmarineHttpVersion.one);
     }
 
-    const authenticate = async (emailAddress?: string, password?: string): Promise<AuthenticationIdentity|void> => {
-        if (identity.claims.expiration > new Date(Date.now())) {
-            return identity;
-        }
+    componentDidMount() {
+        const bearerToken: string|null = localStorage.getItem(BEARER_TOKEN_KEY);
+        window.console.log(localStorage.getItem);
+
+        window.console.log("BEARER TOKEN IS " + bearerToken);
+        const identity = AuthenticationIdentity.fromBearerToken(bearerToken || DEFAULT_BEARER_TOKEN);
+
+        this.setState({ identity });
+    }
+
+    register = async (emailAddress?: string, password?: string, userName?: string, friendlyName?: string): Promise<void> => {
+        const request: ISubmarineRegisterRequest = { emailAddress, password, userName, friendlyName };
+        await this._authenticationHttpClient.register(request);
+    }
+
+    authenticate = async (emailAddress?: string, password?: string): Promise<AuthenticationIdentity> => {
+        if (!this.state.identity?.hasExpired())
+            return new Promise(r => r(this.state.identity))
 
         const request: ISubmarineAuthenticateRequest = { emailAddress, password };
-        const response: ISubmarineAuthenticatedResponse = await client.authenticate(request);
+        const response: ISubmarineAuthenticatedResponse = await this._authenticationHttpClient.authenticate(request);
 
-        const updatedIdentity = AuthenticationIdentity.fromBearerToken(response.bearerToken);
-        setIdentity(updatedIdentity);
+        const identity = AuthenticationIdentity.fromBearerToken(response.bearerToken);
+        this.setState({ identity });
 
-        return updatedIdentity;
+        return identity;
     }
 
-    const context = { register, authenticate } as IAuthenticationContext;
+    render = () => {
+        const context: IAuthenticationContext = { register: this.register, authenticate: this.authenticate };
 
-    return (
-        <AuthenticationContext.Provider value={context}>
-            {children}
-        </AuthenticationContext.Provider>
-    )
-
+        return (
+            <AuthenticationContext.Provider value={context}>
+                {this.props.children}
+            </AuthenticationContext.Provider>
+        )
+    }
 }
 
 export const useAuthenticationContext = () => useContext(AuthenticationContext);
