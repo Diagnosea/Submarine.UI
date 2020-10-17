@@ -1,6 +1,4 @@
 import SubmarineAuthenticationHttpClient from "./SubmarineAuthenticationHttpClient";
-import ISubmarineRegisterRequest from "./Register/ISubmarineRegisterRequest";
-import ISubmarineRegisteredResponse from "./Register/ISubmarineRegisteredResponse";
 import HttpClientMethod from "../../../Http/HttpClientMethod";
 import SubmarineValidationError from "../../Errors/SubmarineValidationError";
 import ISubmarineValidationResponse from "../../ISubmarineValidationResponse";
@@ -40,72 +38,6 @@ describe("SubmarineAuthenticationHttpClient", () => {
 
     afterEach(() => {
         jest.clearAllMocks();
-    })
-
-    describe("register", () => {
-        describe(`On Status Code ${HttpClientStatusCode.Created}`, () => {
-            it("Returns ISubmarineRegisteredResponse With User ID", async () => {
-                // Arrange
-                const responseData: ISubmarineRegisteredResponse = { userId: "This is a user id" };
-                const responsePromise = generateResponsePromise(201, responseData);
-                (fetch as jest.Mock).mockReturnValue(responsePromise);
-
-                // Act
-                const result: ISubmarineRegisteredResponse = await submarineAuthenticationHttpClient.register({});
-
-                // Assert
-                expect(fetch).toHaveBeenCalledTimes(1);
-
-                const options = generateAnonymousRequestInit<ISubmarineRegisterRequest>(HttpClientMethod.POST, {});
-                const url = [SubmarineHttpVersion.one, SubmarineHttpRoute.authentication, "register"].join("/");
-                expect(fetch).toHaveBeenCalledWith(url, options);
-
-                expect(result).toHaveProperty("userId");
-            })
-        })
-
-        describe(`On Status Code ${HttpClientStatusCode.BadRequest}`, () => {
-            it("Throws SubmarineValidationError", async () => {
-                // Arrange
-                const responseData: ISubmarineValidationResponse = { errors: {"emailAddress": ["This is a validation error"] } };
-                const responsePromise = generateResponsePromise(400, responseData);
-                (fetch as jest.Mock).mockReturnValue(responsePromise);
-
-                // Act & Assert
-                try {
-                    await submarineAuthenticationHttpClient.register({});
-                } catch (error) {
-                    expect(error instanceof SubmarineValidationError).toBe(true);
-                    expect(error.errors).toHaveProperty("emailAddress");
-                    expect(error.errors.emailAddress).toHaveLength(1);
-                    expect(error.errors.emailAddress[0]).toBe("This is a validation error")
-                }
-            })
-        })
-
-        describe(`On Status Code ${HttpClientStatusCode.Conflict}`, () => {
-            it("Throws SubmarineExceptionalError", async () => {
-                // Arrange
-                const responseData: ISubmarineExceptionResponse = {
-                    exceptionCode: 4,
-                    technicalMessage: `User Already Exists For Email 'john.smith@diagnosea.com'`,
-                    userMessage: "User:UserExistsWithEmail"
-                };
-
-                const responsePromise = generateResponsePromise(409, responseData);
-                (fetch as jest.Mock).mockReturnValue(responsePromise);
-
-                // Act & Assert
-                try {
-                    await submarineAuthenticationHttpClient.register({});
-                } catch (error) {
-                    expect(error instanceof SubmarineExceptionalError).toBe(true);
-                    expect(error.exceptionCode).toBe(responseData.exceptionCode);
-                    expect(error.technicalMessage).toBe(responseData.technicalMessage);
-                    expect(error.userMessage).toBe(responseData.userMessage);
-                }
-            })
-        })
     })
 
     describe("authenticate", () => {

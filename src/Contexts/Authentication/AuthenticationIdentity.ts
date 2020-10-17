@@ -33,8 +33,8 @@ export default class AuthenticationIdentity {
         const claims =  new AuthenticationIdentityClaims(
             httpWebToken.sub,
             httpWebToken.name,
-            httpWebToken.roles,
-            httpWebToken.products,
+            httpWebToken.roles.split(', '),
+            httpWebToken.products.split(', '),
             httpWebToken.aud,
             issued,
             expiration);

@@ -4,7 +4,7 @@ export default interface IHttpWebToken {
     iss: string,
     iat: string,
     exp: string,
-    roles: string[];
-    products: string[];
+    roles: string;
+    products: string;
     aud: string;
 }
