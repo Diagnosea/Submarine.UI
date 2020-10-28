@@ -13,15 +13,15 @@ import SubmarineValidationError from "../../SubmarineHttp/Errors/SubmarineValida
 import Translations from "../../Translations/Translations";
 
 const Container = styled(Paper)`
-    width: 50vw;
-    height: 70vh;
+    width: 80vw;
+    height: 80vh;
     margin: auto;
-    margin-top: 15vh;
+    margin-top: 10vh;
 `
 
 const LeftColumn = styled(Grid)`
     border-right: 2px solid ${Brand.grey};
-    height: 70vh;
+    height: 80vh;
     padding-top: 6em;
 `
 
