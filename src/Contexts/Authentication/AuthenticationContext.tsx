@@ -6,20 +6,27 @@ import IAuthenticationContextProviderState from "./IAuthenticationContextProvide
 import AuthenticationIdentity from "./AuthenticationIdentity";
 import SubmarineHttpVersion from "../../SubmarineHttp/SubmarineHttpVersion";
 import SubmarineAuthenticationHttpClient from "../../SubmarineHttp/Resources/Authentication/SubmarineAuthenticationHttpClient";
-import ISubmarineRegisterRequest from "../../SubmarineHttp/Resources/Authentication/Register/ISubmarineRegisterRequest";
 import ISubmarineAuthenticateRequest from "../../SubmarineHttp/Resources/Authentication/Authenticate/ISubmarineAuthenticateRequest";
 import ISubmarineAuthenticatedResponse from "../../SubmarineHttp/Resources/Authentication/Authenticate/ISubmarineAuthenticatedResponse";
 
-const InitialAuthenticationContext = { register: () => {}, authenticate: () => { } } as IAuthenticationContext;
+const InitialAuthenticationContext = { authenticate: () => { } } as IAuthenticationContext;
 const AuthenticationContext = createContext(InitialAuthenticationContext)
 
 const BEARER_TOKEN_KEY = "sub-ui-bearerToken";
-const DEFAULT_BEARER_TOKEN = "";
 
 export class AuthenticationContextProvider extends Component {
     public readonly props!: IAuthenticationContextProviderProps;
     public readonly state: IAuthenticationContextProviderState;
     private readonly _authenticationHttpClient: SubmarineAuthenticationHttpClient;
+
+    get identity(): AuthenticationIdentity|undefined {
+        if (this.state.identity) return this.state.identity;
+
+        const bearerToken = localStorage.getItem(BEARER_TOKEN_KEY);
+        if (bearerToken) return AuthenticationIdentity.fromBearerToken(bearerToken);
+
+        return undefined;
+    }
 
     constructor(props: IAuthenticationContextProviderProps) {
         super(props);
@@ -31,25 +38,18 @@ export class AuthenticationContextProvider extends Component {
 
     componentDidMount() {
         const bearerToken: string|null = localStorage.getItem(BEARER_TOKEN_KEY);
-        window.console.log(localStorage.getItem);
 
-        window.console.log("BEARER TOKEN IS " + bearerToken);
-        const identity = AuthenticationIdentity.fromBearerToken(bearerToken || DEFAULT_BEARER_TOKEN);
-
-        this.setState({ identity });
-    }
-
-    register = async (emailAddress?: string, password?: string, userName?: string, friendlyName?: string): Promise<void> => {
-        const request: ISubmarineRegisterRequest = { emailAddress, password, userName, friendlyName };
-        await this._authenticationHttpClient.register(request);
+        if (bearerToken) {
+            const identity = AuthenticationIdentity.fromBearerToken(bearerToken);
+            this.setState({ identity });
+        }
     }
 
     authenticate = async (emailAddress?: string, password?: string): Promise<AuthenticationIdentity> => {
-        if (!this.state.identity?.hasExpired())
-            return new Promise(r => r(this.state.identity))
-
         const request: ISubmarineAuthenticateRequest = { emailAddress, password };
         const response: ISubmarineAuthenticatedResponse = await this._authenticationHttpClient.authenticate(request);
+
+        localStorage.setItem(BEARER_TOKEN_KEY, response.bearerToken);
 
         const identity = AuthenticationIdentity.fromBearerToken(response.bearerToken);
         this.setState({ identity });
@@ -58,7 +58,10 @@ export class AuthenticationContextProvider extends Component {
     }
 
     render = () => {
-        const context: IAuthenticationContext = { register: this.register, authenticate: this.authenticate };
+        const context: IAuthenticationContext = {
+            identity: this.identity,
+            authenticate: this.authenticate
+        };
 
         return (
             <AuthenticationContext.Provider value={context}>
@@ -69,3 +72,5 @@ export class AuthenticationContextProvider extends Component {
 }
 
 export const useAuthenticationContext = () => useContext(AuthenticationContext);
+
+export default useAuthenticationContext;

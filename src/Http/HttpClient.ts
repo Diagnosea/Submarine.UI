@@ -14,7 +14,7 @@ export default abstract class HttpClient {
 
         return {
             ...currentHeaders,
-            ...appliedHeaders
+            ...appliedHeaders,
         }
     }
 

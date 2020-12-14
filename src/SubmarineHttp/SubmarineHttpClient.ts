@@ -8,6 +8,7 @@ import HttpClientMethod from "../Http/HttpClientMethod";
 import HttpClient from "../Http/HttpClient";
 import HttpClientAcceptHeader from "../Http/Headers/HttpClientAcceptHeader";
 import HttpClientBearerAuthorizationHeader from "../Http/Headers/HttpClientBearerAuthorizationHeader";
+import HttpClientContentTypeHeader from "../Http/Headers/HttpClientContentTypeHeader";
 
 export default abstract class SubmarineHttpClient extends HttpClient {
 
@@ -15,6 +16,7 @@ export default abstract class SubmarineHttpClient extends HttpClient {
         super(`${version}/${route}`);
 
         this._setAcceptHeader("application/json")
+        this._setContentTypeHeader("application/json")
     }
 
     public setBearerToken(bearerToken: string) {
@@ -26,6 +28,13 @@ export default abstract class SubmarineHttpClient extends HttpClient {
         init.method = HttpClientMethod.GET;
 
         return this._performSubmarineHttpRequest<TResponse>(url, init);
+    }
+
+    public options<TRequest>(url: string, body: TRequest, init: RequestInit = {}) {
+        init.method = HttpClientMethod.OPTIONS;
+        init.body = JSON.stringify(body);
+
+        return this._performSubmarineHttpRequest<void>(url, init);
     }
 
     public post<TRequest, TResponse>(url: string, body: TRequest, init: RequestInit = {}) {
@@ -51,6 +60,11 @@ export default abstract class SubmarineHttpClient extends HttpClient {
     private _setAcceptHeader(...contentTypes: string[]) {
         const acceptHeader = new HttpClientAcceptHeader(contentTypes);
         this._headers.push(acceptHeader);
+    }
+
+    private _setContentTypeHeader(contentType: string) {
+        const contentTypeHeader = new HttpClientContentTypeHeader(contentType);
+        this._headers.push(contentTypeHeader);
     }
 
     protected async _performSubmarineHttpRequest<TResponse>(url: string, options: RequestInit): Promise<TResponse>  {
