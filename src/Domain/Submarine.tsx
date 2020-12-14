@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import useAuthenticationContext from "../Contexts/Authentication/AuthenticationContext";
 import Authentication from "./Authentication/Authentication";
-import Loading from "./Loading/Loading";
+import useTankContext from "../Contexts/Tank/TankContext";
 
 export const Submarine = () => {
     const { identity } = useAuthenticationContext();
+    const { tanksLoaded } = useTankContext();
     const hasActiveIdentity = identity && !identity?.hasExpired();
 
-    const [loadingPreview] = useState<boolean>(true);
-
-    if (hasActiveIdentity && loadingPreview) {
-        return <Loading  />
-    } else if (hasActiveIdentity && !loadingPreview) {
-        return <p>Loaded all data!</p>
+    if (hasActiveIdentity && tanksLoaded) {
+        return <p>Authenticated.</p>
     }
 
     return <Authentication />;

@@ -9,19 +9,20 @@ import Logo from "../../Content/logo.png";
 import WhatYouCanDo from "../../Content/whatyoucando.png";
 import Brand from "../../Theme/Brand";
 import { useAuthenticationContext } from "../../Contexts/Authentication/AuthenticationContext";
+import { useTankContext } from "../../Contexts/Tank/TankContext";
 import SubmarineValidationError from "../../SubmarineHttp/Errors/SubmarineValidationError";
 import Translations from "../../Translations/Translations";
 
 const Container = styled(Paper)`
-    width: 80vw;
-    height: 80vh;
+    width: 1028px;
+    height: 696px;
     margin: auto;
     margin-top: 10vh;
 `
 
 const LeftColumn = styled(Grid)`
     border-right: 2px solid ${Brand.grey};
-    height: 80vh;
+    height: 696px;
     padding-top: 6em;
 `
 
@@ -51,23 +52,22 @@ const DetailsTextField = styled(TextField)`
     margin-right: 0 !important;
 `
 
-const ConfirmationButtonContainer = styled.div`
+const LeftColumnFooter = styled.div`
     margin-top: 2em;
     text-align: right;
+    display: flex;
+    justify-content: flex-end;
 `
 
 const ConfirmationButton = styled(Button)`
     text-align: right;
-    margin: 2em !important;
+    margin: 2.4em !important;
     margin-left: 0 !important;
+    margin-right: 0;
 `
 
-const LoadingContainer = styled.div`
-    height: 176px;
-`
-
-const LoadingCircularProgress = styled(CircularProgress)`
-    margin-top: 2.5em;
+const ConfirmationLoader = styled(CircularProgress)`
+    margin: 2em !important;
 `
 
 
@@ -78,9 +78,15 @@ interface IAuthenticationCredentials {
 
 
 export const Authentication = () => {
-    const { authenticate } = useAuthenticationContext();
+    const { identity, authenticate } = useAuthenticationContext();
+    const { setIdentity, loadTanks } = useTankContext();
 
-    const [credentials, setCredentials] = useState<IAuthenticationCredentials>({});
+    if (identity && !identity?.hasExpired()) {
+        setIdentity(identity);
+    }
+
+    const initialCredentials = { emailAddress: "", password: "" };
+    const [credentials, setCredentials] = useState<IAuthenticationCredentials>(initialCredentials);
     const [loading, setLoading] = useState<boolean>(false);
     const [validationError, setValidationError] = useState<SubmarineValidationError>();
 
@@ -97,7 +103,7 @@ export const Authentication = () => {
 
         try {
             await authenticate(credentials.emailAddress, credentials.password);
-            setLoading(false);
+            await loadTanks();
         } catch (error: any) {
             if (error instanceof SubmarineValidationError) {
                 setValidationError(error);
@@ -106,62 +112,44 @@ export const Authentication = () => {
         }
     }
 
-    const renderEmailAddressTextField = () => {
-        const emailAddressValidationError: string|undefined = !!validationError
-            ? validationError.getForField("emailAddress")
-            : undefined;
+    const emailAddressValidationError: string|undefined = !!validationError
+        ? validationError.getForField("emailAddress")
+        : undefined;
 
-        return (
-            <DetailsTextField
-                label="Email Address"
-                name="emailAddress"
-                value={credentials.emailAddress}
-                onChange={onChange}
-                error={!!emailAddressValidationError}
-                helperText={emailAddressValidationError ? Translations[emailAddressValidationError] : null}
-                fullWidth
-            />
-        )
-    };
-
-    const renderPasswordTextField = () => {
-        const passwordValidationError: string|undefined = !!validationError
-            ? validationError.getForField("password")
-            : undefined;
-
-        return (
-            <DetailsTextField
-                label="Password"
-                name="password"
-                type="password"
-                value={credentials.password}
-                onChange={onChange}
-                error={!!passwordValidationError}
-                helperText={passwordValidationError ? Translations[passwordValidationError] : null}
-                fullWidth
-            />
-        )
-    }
+    const passwordValidationError: string|undefined = !!validationError
+        ? validationError.getForField("password")
+        : undefined;
 
     return (
         <Container>
             <Grid container>
                 <LeftColumn item xs={4}>
                     <LogoImg src={Logo} alt="logo" />
-                    {
-                        !loading &&
-                        <TextFieldContainer>
-                            {renderEmailAddressTextField()}
-                            {renderPasswordTextField()}
-                        </TextFieldContainer>
-                    }
-                    {
-                        loading &&
-                        <LoadingContainer>
-                            <LoadingCircularProgress size={100} />
-                        </LoadingContainer>
-                    }
-                    <ConfirmationButtonContainer>
+                    <TextFieldContainer>
+                        <DetailsTextField
+                            label="Email Address"
+                            name="emailAddress"
+                            value={credentials.emailAddress}
+                            disabled={loading}
+                            onChange={onChange}
+                            error={!!emailAddressValidationError}
+                            helperText={emailAddressValidationError ? Translations[emailAddressValidationError] : null}
+                            fullWidth
+                        />
+                        <DetailsTextField
+                            label="Password"
+                            name="password"
+                            type="password"
+                            value={credentials.password}
+                            disabled={loading}
+                            onChange={onChange}
+                            error={!!passwordValidationError}
+                            helperText={passwordValidationError ? Translations[passwordValidationError] : null}
+                            fullWidth
+                        />
+                    </TextFieldContainer>
+                    <LeftColumnFooter>
+                        {loading && <ConfirmationLoader />}
                         <ConfirmationButton
                             variant="contained"
                             color="primary"
@@ -169,14 +157,14 @@ export const Authentication = () => {
                         >
                             Sign In
                         </ConfirmationButton>
-                    </ConfirmationButtonContainer>
+                    </LeftColumnFooter>
                 </LeftColumn>
                 <RightColumn item xs={8}>
                     <WhatYouCanDoImg alt="What You Can Do" src={WhatYouCanDo} />
                 </RightColumn>
             </Grid>
         </Container>
-    )
+    );
 }
 
 export default Authentication;
