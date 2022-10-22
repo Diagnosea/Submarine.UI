@@ -1,7 +1,8 @@
-import { createMuiTheme } from "@material-ui/core/styles";
+import { createTheme } from '@mui/material/styles';
+
 import brand from "./Brand";
 
-export const submarineMuiTheme = createMuiTheme({
+export const submarineMuiTheme = createTheme({
     palette: {
         primary: {
             main: brand.orange,

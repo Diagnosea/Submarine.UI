@@ -1,10 +1,10 @@
 import React, {ChangeEvent, useState} from "react";
 import styled from "styled-components";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import TextField from "@material-ui/core/TextField";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import Paper from "@mui/material/Paper";
+import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Logo from "../../Content/logo.png";
 import WhatYouCanDo from "../../Content/whatyoucando.png";
 import Brand from "../../Theme/Brand";

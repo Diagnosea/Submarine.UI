@@ -24,7 +24,7 @@ function generateAnonymousRequestInit<TRequest>(method: string, body: TRequest):
         method,
         body: JSON.stringify(body),
         headers: {
-            "Accept": "application/json"
+            "Content-Type": "application/json"
         }
     }
 }
@@ -63,45 +63,41 @@ describe("SubmarineAuthenticationHttpClient", () => {
         });
 
         describe(`On Status Code ${HttpClientStatusCode.BadRequest}`, () => {
-            it("Throws SubmarineValidationError", async () => {
+            it("Throws SubmarineValidationError",  async () => {
                 // Arrange
-                const responseData: ISubmarineValidationResponse = { errors: {"emailAddress": ["This is a validation error"] } };
+                const errorInformation: any = { errors: {"emailAddress": ["This is a validation error"] } }
+
+                const responseData: ISubmarineValidationResponse = errorInformation
                 const responsePromise = generateResponsePromise(400, responseData);
                 (fetch as jest.Mock).mockReturnValue(responsePromise);
 
-                // Act & Assert
-                try {
-                    await submarineAuthenticationHttpClient.authenticate({});
-                } catch (error) {
-                    expect(error instanceof SubmarineValidationError).toBe(true);
-                    expect(error.errors).toHaveProperty("emailAddress");
-                    expect(error.errors.emailAddress).toHaveLength(1);
-                    expect(error.errors.emailAddress[0]).toBe("This is a validation error")
-                }
+                // Act
+                const act = () => submarineAuthenticationHttpClient.authenticate({});
+
+                // Assert
+                await expect(act()).rejects.toMatchObject(errorInformation);
             })
         })
 
         describe(`On Status Code ${HttpClientStatusCode.NotFound}`, () => {
-            it("Throws SubmarineExceptionalError", async () => {
+            it("Throws SubmarineExceptionalError",  async () => {
                 // Arrange
-                const responseData: ISubmarineExceptionResponse = {
+                const errorInformation: any = {
                     exceptionCode: 3,
                     technicalMessage: "This is a technical message",
                     userMessage: "User:UserExistsWithEmail"
                 };
 
+                const responseData: ISubmarineExceptionResponse = errorInformation;
+
                 const responsePromise = generateResponsePromise(409, responseData);
                 (fetch as jest.Mock).mockReturnValue(responsePromise);
 
-                // Act & Assert
-                try {
-                    await submarineAuthenticationHttpClient.authenticate({});
-                } catch (error) {
-                    expect(error instanceof SubmarineExceptionalError).toBe(true);
-                    expect(error.exceptionCode).toBe(responseData.exceptionCode);
-                    expect(error.technicalMessage).toBe(responseData.technicalMessage);
-                    expect(error.userMessage).toBe(responseData.userMessage);
-                }
+                // Act
+                const act = () => submarineAuthenticationHttpClient.authenticate({});
+
+                // Await
+                await expect(act()).rejects.toMatchObject(errorInformation);
             })
         })
     })

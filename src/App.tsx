@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeProvider } from "@material-ui/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { AuthenticationContextProvider } from "./Contexts/Authentication/AuthenticationContext";
 import { TankContextProvider } from "./Contexts/Tank/TankContext";
 import Submarine from "./Domain/Submarine";
